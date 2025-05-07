@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.lodgon</groupId>
+    <artifactId>cameracapture</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>24</maven.compiler.source>
+        <maven.compiler.target>24</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <release>24</release>
+                    <compilerArgs>--enable-preview</compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.coffeelibs</groupId>
+                <artifactId>jextract-maven-plugin</artifactId>
+                <version>0.4.1</version>
+                <configuration>
+                    <executable>${env.JEXTRACT_BIN}</executable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>example</id>
+                        <goals>
+                            <goal>sources</goal>
+                        </goals>
+                        <configuration>
+                            <headerFile>src/main/c/cameracapture.h</headerFile>
+                            <targetPackage>com.lodgon.cameracapture.h</targetPackage>
+                            <headerClassName>NativeCapture</headerClassName>
+                            <includeFunctions>
+                                <includeFunction>init</includeFunction>
+                                <includeFunction>start</includeFunction>
+                                <includeFunction>stop</includeFunction>
+                                <includeFunction>got_frame</includeFunction>
+                            </includeFunctions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
