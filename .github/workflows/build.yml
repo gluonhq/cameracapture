@@ -64,7 +64,7 @@ jobs:
         $ProgressPreference = "SilentlyContinue"
         Invoke-WebRequest https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.ARCH }}_bin.tar.gz -OutFile jextract.tar.gz
         tar -xvzf jextract.tar.gz -C $env:GITHUB_WORKSPACE
-        echo "JEXTRACT_BIN=${GITHUB_WORKSPACE}/jextract-22/bin/jextract.bat" >> $GITHUB_ENV
+        echo "JEXTRACT_BIN=${GITHUB_WORKSPACE}/jextract-22/bin/jextract" >> $GITHUB_ENV
         del jextract.tar.gz
       shell: powershell
     - name: Build Native Code
