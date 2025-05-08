@@ -40,7 +40,7 @@ void PrintGUID(GUID guid, UINT32 w, UINT32 h) {
     if (guid == MFVideoFormat_IYUV) std::cout << "MFVideoFormat_IYUV [" << w << ", " << h << "]\n";
     if (guid == MFVideoFormat_NV11) std::cout << "MFVideoFormat_NV11 [" << w << ", " << h << "]\n";
     if (guid == MFVideoFormat_NV12) std::cout << "MFVideoFormat_NV12 [" << w << ", " << h << "]\n";
-    if (guid == MFVideoFormat_NV21) std::cout << "MFVideoFormat_NV21 [" << w << ", " << h << "]\n";
+    // if (guid == MFVideoFormat_NV21) std::cout << "MFVideoFormat_NV21 [" << w << ", " << h << "]\n";
     if (guid == MFVideoFormat_UYVY) std::cout << "MFVideoFormat_UYVY [" << w << ", " << h << "]\n";
     if (guid == MFVideoFormat_Y41P) std::cout << "MFVideoFormat_Y41P [" << w << ", " << h << "]\n";
     if (guid == MFVideoFormat_Y41T) std::cout << "MFVideoFormat_Y41T [" << w << ", " << h << "]\n";
