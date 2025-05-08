@@ -1,0 +1,95 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, macos-latest, macos-13, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set environment variables
+        run: |
+          echo "OS=${RUNNER_OS,,}" >> $GITHUB_ENV
+          echo "ARCH=${RUNNER_ARCH,,}" >> $GITHUB_ENV
+          echo "AARCH=${RUNNER_ARCH,,}" >> $GITHUB_ENV
+          if [[ ${{ runner.os }} == "Linux" ]]
+          then
+            classifier=linux-x86_64
+          elif [[ ${{ runner.os }} == "macOS" ]]
+          then
+            if [[ ${{ runner.arch }} == "X64" ]]
+            then
+              classifier=darwin-x86_64
+            else
+              classifier=darwin-aarch64
+              echo "AARCH=aarch64" >> $GITHUB_ENV
+            fi
+          elif [[ ${{ runner.os }} == "Windows" ]]
+          then
+            classifier=windows-x86_64
+          fi
+          echo "CLASSIFIER=$classifier" >> $GITHUB_ENV
+        shell: bash
+      - name: Setup Java and Apache Maven
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '22'
+          server-id: gluon-nexus
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
+      - name: Download and extract JEXTRACT (default)
+        if: runner.os != 'Windows'
+        run: |
+          download_url="https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.AARCH }}_bin.tar.gz"
+          wget -q --show-progress -O $RUNNER_TEMP/jextract.tar.gz $download_url
+          tar -xvzf $RUNNER_TEMP/jextract.tar.gz -C $GITHUB_WORKSPACE
+      - name: Download and extract JEXTRACT (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          Invoke-WebRequest https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.ARCH }}_bin.tar.gz -OutFile jextract.tar.gz
+          tar -xvzf jextract.tar.gz -C $env:GITHUB_WORKSPACE
+          del jextract.tar.gz
+        shell: powershell
+      - name: Build Native Code
+        run: |
+          cmake -B build
+          cmake --build build --config Release
+          mkdir -p src/main/resources
+      - name: Copy Native Library (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cp build/*.dylib src/main/resources
+      - name: Copy Native Library (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cp build/*.so src/main/resources
+      - name: Copy Native Library (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cp build/*.dll src/main/resources
+      - name: Build Java Project
+        run: mvn -B -ntp clean verify
+      - name: Publish Snapshots
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Find version
+          ver=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          if [[ $ver == *"SNAPSHOT"* ]]
+          then
+              mvn -B -ntp -Dclassifier=${{ env.CLASSIFIER }} clean deploy
+          fi
+        shell: bash
+        env:
+          MAVEN_USERNAME: ${{ secrets.GLUON_NEXUS_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.GLUON_NEXUS_PASSWORD }}
