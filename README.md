@@ -33,5 +33,5 @@ should be done from within a `Developer Command Prompt for Visual Studio`.
 The java library can be built with maven. It requires the following environment
 variables to be set:
 
-  - JAVA_HOME: path to a JDK 24 installation folder
+  - JAVA_HOME: path to a JDK 22 (or later) installation folder
   - JEXTRACT_BIN: full path to the jextract script located in the bin folder of jextract
