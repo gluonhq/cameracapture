@@ -20,8 +20,8 @@ jobs:
     - name: Set environment variables
       run: |
         echo "OS=`echo ${RUNNER_OS} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
-        echo "ARCH=`echo ${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
-        echo "AARCH=`echo ${RUNNER_ARCH}" | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
+        echo "ARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
+        echo "AARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         if [[ ${{ runner.os }} == "Linux" ]]
         then
           classifier=linux-x86_64
