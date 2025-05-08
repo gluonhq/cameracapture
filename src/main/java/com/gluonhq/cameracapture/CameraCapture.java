@@ -1,4 +1,4 @@
-package com.lodgon.cameracapture;
+package com.gluonhq.cameracapture;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import com.lodgon.cameracapture.callback.InnerFrameCallback;
-import com.lodgon.cameracapture.h.NativeCapture;
+import com.gluonhq.cameracapture.callback.InnerFrameCallback;
+import com.gluonhq.cameracapture.h.NativeCapture;
 
 public class CameraCapture {
 

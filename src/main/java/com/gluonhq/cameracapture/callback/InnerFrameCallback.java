@@ -1,4 +1,4 @@
-package com.lodgon.cameracapture.callback;
+package com.gluonhq.cameracapture.callback;
 
 public interface InnerFrameCallback {
 

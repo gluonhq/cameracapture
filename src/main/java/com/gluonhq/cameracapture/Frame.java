@@ -1,4 +1,4 @@
-package com.lodgon.cameracapture;
+package com.gluonhq.cameracapture;
 
 /**
  * Holds the information of a single captured frame of the camera,

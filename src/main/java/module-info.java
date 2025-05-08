@@ -1,3 +1,3 @@
-module com.lodgon.cameracapture {
-    exports com.lodgon.cameracapture;
+module com.gluonhq.cameracapture {
+    exports com.gluonhq.cameracapture;
 }
