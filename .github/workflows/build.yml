@@ -19,7 +19,7 @@ jobs:
         ref: main
     - name: linux install stuff
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      run: sudo apt-get update && sudo apt-get install -y libudev-dev libv4l-dev
     - name: Set environment variables
       run: |
         echo "OS=`echo ${RUNNER_OS} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
