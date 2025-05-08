@@ -85,7 +85,7 @@ jobs:
       run: |
         cp build/*.dll src/main/resources
     - name: Build Java Project
-      run: mvn -B -ntp clean verify
+      run: mvn -B -ntp -Dclassifier=${{ env.CLASSIFIER }} clean verify
     - name: Publish Snapshots
       if: github.ref == 'refs/heads/main'
       run: |
