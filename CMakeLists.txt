@@ -4,7 +4,6 @@ project(cameracapture VERSION 0.0.1)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_library(cameracapture SHARED src/main/c/windows/capture.cpp)
-    set_target_properties(cameracapture PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<0:>)
     target_link_libraries(cameracapture mfplat mfreadwrite mf)
 endif()
 

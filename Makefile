@@ -57,14 +57,13 @@ ifeq (,$(findstring $(strip $(target)),$(known_targets)))
   target := Default
 endif
 
-$(info uname_p is $(UNAME_P))
-$(info uname_s is $(UNAME_S))
-
 $(info target is $(target))
 
 LIBNAME    := $($(target)_LIBNAME)
 CLASSIFIER := $($(target)_CLASSIFIER)
 NATIVE_LIB := src/main/resources/$(LIBNAME)
+
+default: install
 
 $(NATIVE_OUTPUT_DIR):
 	cmake -B build
@@ -72,7 +71,7 @@ $(NATIVE_OUTPUT_DIR):
 native: $(NATIVE_LIB)
 
 $(NATIVE_LIB): $(NATIVE_OUTPUT_DIR)
-	cmake --build $(NATIVE_OUTPUT_DIR) --config Release
+	cmake --build $(NATIVE_OUTPUT_DIR)
 	mkdir -p $(@D)
 	cp $(NATIVE_OUTPUT_DIR)/$(LIBNAME) $(NATIVE_LIB)
 
