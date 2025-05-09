@@ -71,7 +71,7 @@ $(NATIVE_OUTPUT_DIR):
 native: $(NATIVE_LIB)
 
 $(NATIVE_LIB): $(NATIVE_OUTPUT_DIR)
-	cmake --build $(NATIVE_OUTPUT_DIR)
+	cmake --build $(NATIVE_OUTPUT_DIR) --config Release
 	mkdir -p $(@D)
 	cp $(NATIVE_OUTPUT_DIR)/$(LIBNAME) $(NATIVE_LIB)
 
