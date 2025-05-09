@@ -3,15 +3,7 @@
 A Java interface for capturing camera frames natively. The interface
 from Java to the native code is generated with [jextract](https://github.com/openjdk/jextract).
 
-## Compiling native code
-
-Native compilation is done in a CMake project. The following steps
-will generate a shared native library that can then be used from Java.
-
-```
-cmake -B build
-cmake --build build --config Release
-```
+## Requirements
 
 ### Linux
 
@@ -28,10 +20,16 @@ The implementation for macOS relies on the `AVFoundation` framework.
 The Windows implementation uses Windows Media Framework. Running `cmake`
 should be done from within a `Developer Command Prompt for Visual Studio`.
 
-## Compiling the java library
+## Compiling the project
 
-The java library can be built with maven. It requires the following environment
-variables to be set:
+You can use the Makefile for compiling the project. It requires the following
+environment variables to be set:
 
   - JAVA_HOME: path to a JDK 22 (or later) installation folder
-  - JEXTRACT_BIN: full path to the jextract script located in the bin folder of jextract
+  - JEXTRACT: path to the jextract installation folder
+
+Run make to build the project:
+
+```
+make install
+```

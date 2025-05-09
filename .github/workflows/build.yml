@@ -25,23 +25,13 @@ jobs:
         echo "OS=`echo ${RUNNER_OS} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         echo "ARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         echo "AARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
-        if [[ ${{ runner.os }} == "Linux" ]]
+        if [[ ${{ runner.os }} == "macOS" ]]
         then
-          classifier=linux-x86_64
-        elif [[ ${{ runner.os }} == "macOS" ]]
-        then
-          if [[ ${{ runner.arch }} == "X64" ]]
+          if [[ ${{ runner.arch }} != "X64" ]]
           then
-            classifier=darwin-x86_64
-          else
-            classifier=darwin-aarch64
             echo "AARCH=aarch64" >> $GITHUB_ENV
           fi
-        elif [[ ${{ runner.os }} == "Windows" ]]
-        then
-          classifier=windows-x86_64
         fi
-        echo "CLASSIFIER=$classifier" >> $GITHUB_ENV
       shell: bash
     - name: Setup Java and Apache Maven
       uses: actions/setup-java@v3
@@ -57,35 +47,20 @@ jobs:
         download_url="https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.AARCH }}_bin.tar.gz"
         wget -q --show-progress -O $RUNNER_TEMP/jextract.tar.gz $download_url
         tar -xvzf $RUNNER_TEMP/jextract.tar.gz -C $GITHUB_WORKSPACE
-        echo "JEXTRACT_BIN=${GITHUB_WORKSPACE}/jextract-22/bin/jextract" >> $GITHUB_ENV
+        echo "JEXTRACT=${GITHUB_WORKSPACE}/jextract-22" >> $GITHUB_ENV
     - name: Download and extract JEXTRACT (Windows)
       if: runner.os == 'Windows'
       run: |
         $ProgressPreference = "SilentlyContinue"
         Invoke-WebRequest https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.ARCH }}_bin.tar.gz -OutFile jextract.tar.gz
         tar -xvzf jextract.tar.gz -C $env:GITHUB_WORKSPACE
-        echo "JEXTRACT_BIN=$env:GITHUB_WORKSPACE\jextract-22\bin\jextract.bat" >> $env:GITHUB_ENV
+        echo "JEXTRACT=$env:GITHUB_WORKSPACE\jextract-22" >> $env:GITHUB_ENV
         del jextract.tar.gz
       shell: powershell
-    - name: Build Native Code
+    - name: Make Project
       run: |
-        cmake -B build
-        cmake --build build --config Release
-        mkdir -p src/main/resources
-    - name: Copy Native Library (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        cp build/*.dylib src/main/resources
-    - name: Copy Native Library (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        cp build/*.so src/main/resources
-    - name: Copy Native Library (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        cp build/*.dll src/main/resources
-    - name: Build Java Project
-      run: mvn -B -ntp -Dclassifier=${{ env.CLASSIFIER }} clean verify
+        make java
+      shell: bash
     - name: Publish Snapshots
       if: github.ref == 'refs/heads/main'
       run: |
@@ -93,7 +68,7 @@ jobs:
         ver=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         if [[ $ver == *"SNAPSHOT"* ]]
         then
-            mvn -B -ntp -Dclassifier=${{ env.CLASSIFIER }} clean deploy
+            make deploy
         fi
       shell: bash
       env:

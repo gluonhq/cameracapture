@@ -37,28 +37,19 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>io.github.coffeelibs</groupId>
-                <artifactId>jextract-maven-plugin</artifactId>
-                <version>0.4.1</version>
-                <configuration>
-                    <executable>${env.JEXTRACT_BIN}</executable>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
-                        <id>example</id>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>sources</goal>
+                            <goal>add-source</goal>
                         </goals>
                         <configuration>
-                            <headerFile>src/main/c/cameracapture.h</headerFile>
-                            <targetPackage>com.gluonhq.cameracapture.h</targetPackage>
-                            <headerClassName>NativeCapture</headerClassName>
-                            <includeFunctions>
-                                <includeFunction>init</includeFunction>
-                                <includeFunction>start</includeFunction>
-                                <includeFunction>stop</includeFunction>
-                                <includeFunction>got_frame</includeFunction>
-                            </includeFunctions>
+                            <sources>
+                                <source>target/generated-sources/jextract</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
