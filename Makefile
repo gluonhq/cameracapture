@@ -18,7 +18,7 @@ Mac-aarch64_CLASSIFIER := darwin-aarch64
 Windows-x86_64_LIBNAME    := cameracapture.dll
 Windows-x86_64_CLASSIFIER := windows-x86_64
 
-ifeq ($(OS),Windows_NT)
+ifeq ($(OS),windows)
     OS_NAME := Windows
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
 		OS_ARCH := x86_64
@@ -40,6 +40,9 @@ else
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)
+		OS_ARCH := x86_64
+    endif
+    ifeq ($(UNAME_P),i386)
 		OS_ARCH := x86_64
     endif
     ifneq ($(filter arm%,$(UNAME_P)),)
