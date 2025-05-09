@@ -54,6 +54,9 @@ ifeq (,$(findstring $(strip $(target)),$(known_targets)))
   target := Default
 endif
 
+$(info uname_p is $(UNAME_P))
+$(info uname_s is $(UNAME_S))
+
 $(info target is $(target))
 
 LIBNAME    := $($(target)_LIBNAME)
