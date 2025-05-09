@@ -19,31 +19,31 @@ Windows-x86_64_LIBNAME    := cameracapture.dll
 Windows-x86_64_CLASSIFIER := windows-x86_64
 
 ifeq ($(OS),Windows_NT)
-    OS_NAME := "Windows"
+    OS_NAME := Windows
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
-		OS_ARCH := "x86_64"
+		OS_ARCH := x86_64
     else
         ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-			OS_ARCH := "x86_64"
+			OS_ARCH := x86_64
         endif
         ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-            OS_ARCH := "x86"
+            OS_ARCH := x86
         endif
     endif
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
-	    OS_NAME := "Linux"
+	    OS_NAME := Linux
     endif
     ifeq ($(UNAME_S),Darwin)
-	    OS_NAME := "Mac"
+	    OS_NAME := Mac
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)
-		OS_ARCH := "x86_64"
+		OS_ARCH := x86_64
     endif
     ifneq ($(filter arm%,$(UNAME_P)),)
-		OS_ARCH := "aarch64"
+		OS_ARCH := aarch64
     endif
 endif
 
@@ -53,6 +53,8 @@ target := $(OS_NAME)-$(OS_ARCH)
 ifeq (,$(findstring $(strip $(target)),$(known_targets)))
   target := Default
 endif
+
+$(info target is $(target))
 
 LIBNAME    := $($(target)_LIBNAME)
 CLASSIFIER := $($(target)_CLASSIFIER)
