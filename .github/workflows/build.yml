@@ -22,7 +22,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y libudev-dev libv4l-dev
     - name: Set environment variables
       run: |
-        echo "OS=`echo ${RUNNER_OS} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
+        echo "OS_LOWER=`echo ${RUNNER_OS} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         echo "ARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         echo "AARCH=`echo ${RUNNER_ARCH} | tr '[:upper:]' '[:lower:]'`" >> $GITHUB_ENV
         if [[ ${{ runner.os }} == "macOS" ]]
@@ -44,7 +44,7 @@ jobs:
     - name: Download and extract JEXTRACT (default)
       if: runner.os != 'Windows'
       run: |
-        download_url="https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.AARCH }}_bin.tar.gz"
+        download_url="https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS_LOWER }}-${{ env.AARCH }}_bin.tar.gz"
         wget -q --show-progress -O $RUNNER_TEMP/jextract.tar.gz $download_url
         tar -xvzf $RUNNER_TEMP/jextract.tar.gz -C $GITHUB_WORKSPACE
         echo "JEXTRACT=${GITHUB_WORKSPACE}/jextract-22" >> $GITHUB_ENV
@@ -52,7 +52,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         $ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS }}-${{ env.ARCH }}_bin.tar.gz -OutFile jextract.tar.gz
+        Invoke-WebRequest https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_${{ env.OS_LOWER }}-${{ env.ARCH }}_bin.tar.gz -OutFile jextract.tar.gz
         tar -xvzf jextract.tar.gz -C $env:GITHUB_WORKSPACE
         echo "JEXTRACT=$env:GITHUB_WORKSPACE\jextract-22" >> $env:GITHUB_ENV
         del jextract.tar.gz

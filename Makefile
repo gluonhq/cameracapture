@@ -18,7 +18,7 @@ Mac-aarch64_CLASSIFIER := darwin-aarch64
 Windows-x86_64_LIBNAME    := cameracapture.dll
 Windows-x86_64_CLASSIFIER := windows-x86_64
 
-ifeq ($(OS),windows)
+ifeq ($(OS),Windows_NT)
     OS_NAME := Windows
     ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
 		OS_ARCH := x86_64
