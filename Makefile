@@ -3,20 +3,25 @@ JAVA := "$(JAVA_HOME)/bin/java"
 NATIVE_OUTPUT_DIR ?= build
 JAVA_OUTPUT_DIR := target
 
-Default_LIBNAME    := libcameracapture.so
-Default_CLASSIFIER := linux-x86_64
+Default_CMAKE_PRESET := 
+Default_LIBNAME    	 := libcameracapture.so
+Default_CLASSIFIER   := linux-x86_64
 
-Linux-x86_64_LIBNAME    := libcameracapture.so
-Linux-x86_64_CLASSIFIER := linux-x86_64
+Linux-x86_64_CMAKE_PRESET := 
+Linux-x86_64_LIBNAME      := libcameracapture.so
+Linux-x86_64_CLASSIFIER   := linux-x86_64
 
-Mac-x86_64_LIBNAME    := libcameracapture.dylib
-Mac-x86_64_CLASSIFIER := darwin-x86_64
+Mac-x86_64_CMAKE_PRESET := 
+Mac-x86_64_LIBNAME      := libcameracapture.dylib
+Mac-x86_64_CLASSIFIER   := darwin-x86_64
 
-Mac-aarch64_LIBNAME    := libcameracapture.dylib
-Mac-aarch64_CLASSIFIER := darwin-aarch64
+Mac-aarch64_CMAKE_PRESET := 
+Mac-aarch64_LIBNAME      := libcameracapture.dylib
+Mac-aarch64_CLASSIFIER   := darwin-aarch64
 
-Windows-x86_64_LIBNAME    := cameracapture.dll
-Windows-x86_64_CLASSIFIER := windows-x86_64
+Windows-x86_64_CMAKE_PRESET  := --preset Ninja
+Windows-x86_64_LIBNAME       := cameracapture.dll
+Windows-x86_64_CLASSIFIER    := windows-x86_64
 
 ifeq ($(OS),Windows_NT)
     OS_NAME := Windows
@@ -59,14 +64,15 @@ endif
 
 $(info target is $(target))
 
-LIBNAME    := $($(target)_LIBNAME)
-CLASSIFIER := $($(target)_CLASSIFIER)
-NATIVE_LIB := src/main/resources/$(LIBNAME)
+LIBNAME      := $($(target)_LIBNAME)
+CLASSIFIER   := $($(target)_CLASSIFIER)
+NATIVE_LIB   := src/main/resources/$(LIBNAME)
+CMAKE_PRESET := $($(target)_CMAKE_PRESET)
 
 default: install
 
 $(NATIVE_OUTPUT_DIR):
-	cmake -B build
+	cmake -B build $(CMAKE_PRESET)
 
 native: $(NATIVE_LIB)
 
