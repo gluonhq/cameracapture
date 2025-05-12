@@ -11,7 +11,7 @@ jobs:
         os: [ ubuntu-22.04, macos-latest, macos-13, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: main
     - name: linux install stuff
@@ -59,17 +59,22 @@ jobs:
       env:
         MAVEN_USERNAME: ${{ secrets.GLUON_NEXUS_USERNAME }}
         MAVEN_CENTRAL_TOKEN: ${{ secrets.GLUON_NEXUS_PASSWORD }}
-    - name: Commit next development version
-      if: steps.deploy.outputs.exit_code == 0
-      run: |
-        TAG=${GITHUB_REF/refs\/tags\//}
-        NEW_PROJECT_VERSION=${TAG%.*}.$((${TAG##*.} + 1))
-        echo "Update development version to $NEW_PROJECT_VERSION"
-        mvn -ntp versions:set -DnewVersion=$NEW_PROJECT_VERSION-SNAPSHOT -DgenerateBackupPoms=false
-        git config --global user.name 'Gluon Bot'
-        git config --global user.email 'gluon-bot@users.noreply.github.com'
-        git commit pom.xml -m "Prepare development of $NEW_PROJECT_VERSION"
-        git push https://gluon-bot:$PAT@github.com/$GITHUB_REPOSITORY HEAD:main
-      shell: bash
-      env:
-        PAT: ${{ secrets.GITHUB_TOKEN }}
+
+  update-version:
+    runs-on: ubuntu-24.04
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit next development version
+        run: |
+          TAG=${GITHUB_REF/refs\/tags\//}
+          NEW_PROJECT_VERSION=${TAG%.*}.$((${TAG##*.} + 1))
+          echo "Update development version to $NEW_PROJECT_VERSION"
+          mvn -ntp versions:set -DnewVersion=$NEW_PROJECT_VERSION-SNAPSHOT -DgenerateBackupPoms=false
+          git config --global user.name 'Gluon Bot'
+          git config --global user.email 'gluon-bot@users.noreply.github.com'
+          git commit pom.xml -m "Prepare development of $NEW_PROJECT_VERSION"
+          git push https://gluon-bot:$PAT@github.com/$GITHUB_REPOSITORY HEAD:main
+        shell: bash
+        env:
+          PAT: ${{ secrets.GITHUB_TOKEN }}
