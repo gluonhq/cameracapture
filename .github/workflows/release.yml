@@ -34,7 +34,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '22'
+        java-version: '23.0.2'
         server-id: gluon-nexus
         server-username: MAVEN_USERNAME
         server-password: MAVEN_CENTRAL_TOKEN
