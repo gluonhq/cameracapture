@@ -142,15 +142,26 @@ AVCaptureVideoDataOutput *_output;
             size_t width = CVPixelBufferGetWidth(imageBuffer);
             size_t height = CVPixelBufferGetHeight(imageBuffer);
             size_t length = CVPixelBufferGetDataSize(imageBuffer);
+            size_t bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer);
 
             // need to copy data since unlocking image buffer makes data pointer invalid
             uint8_t* copiedData = (uint8_t*) malloc(length);
             memcpy(copiedData, data, length);
+            // swap to RGBA
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    uint8_t* pixel = copiedData + y * bytesPerRow + x * 4;
+                    uint8_t temp = pixel[0];      // B
+                    pixel[0] = pixel[2];          // R
+                    pixel[2] = temp;              // B
+                    // G and A remain unchanged
+                }
+            }
 
             CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (got_frame_callback != NULL) {
-                    got_frame_callback(width, height, 1, copiedData, length);
+                    got_frame_callback(width, height, 2, copiedData, length);
                 }
                 free(copiedData);
             });
