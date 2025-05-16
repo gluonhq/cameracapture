@@ -56,7 +56,7 @@ void sendPicturesResult(int width, int height, int format, uint8_t* data, size_t
     fprintf(stderr, "send pic, format = %d, len = %ld\n", format, len);
 
     if (got_frame_callback != NULL) {
-        got_frame_callback(width, height, 1, data, len);
+        got_frame_callback(width, height, format, data, len);
     }
 }
 
