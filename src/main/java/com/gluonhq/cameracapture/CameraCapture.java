@@ -5,6 +5,8 @@ import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -13,6 +15,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,14 +36,19 @@ public class CameraCapture {
 
     static {
         try {
+            loadNativeLibrary();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to load native library.", ex);
+        }
+     
+        try {
 			FunctionDescriptor gotNativeFrameDescriptor = FunctionDescriptor.ofVoid(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.MAX_VALUE, JAVA_BYTE)), JAVA_INT);
 			MethodHandle gotNativeFrameHandle = MethodHandles.lookup().findStatic(
 				CameraCapture.class, "gotNativeFrame",
                     MethodType.methodType(void.class, int.class, int.class, int.class, MemorySegment.class, int.class)
 			);
-			System.out.println("DESCRIPTOR: " + gotNativeFrameDescriptor);
-			System.out.println("HANDLE: " + gotNativeFrameHandle);
-			MemorySegment gotNativeFrameSegment = Linker.nativeLinker().upcallStub(gotNativeFrameHandle, gotNativeFrameDescriptor, Arena.global());
+
+            MemorySegment gotNativeFrameSegment = Linker.nativeLinker().upcallStub(gotNativeFrameHandle, gotNativeFrameDescriptor, Arena.global());
 			NativeCapture.got_frame(gotNativeFrameSegment);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -88,5 +97,15 @@ public class CameraCapture {
 
     private void gotFrame(int width, int height, int format, byte[] data) {
         this.clientCallback.accept(new Frame(width, height, format, data));
+    }
+
+    private static void loadNativeLibrary() throws IOException {
+        String libraryName = System.mapLibraryName("cameracapture");
+        Path tempFile = Files.createTempFile("cameracapture", libraryName.substring(libraryName.lastIndexOf(".")));
+        try (InputStream isLibrary = CameraCapture.class.getResourceAsStream(libraryName)) {
+            Files.copy(isLibrary, tempFile);
+        }
+
+        System.load(tempFile.toFile().getAbsolutePath());
     }
 }
