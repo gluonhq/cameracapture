@@ -1,0 +1,120 @@
+class Globals {
+    static Map<String, String> targets = ['linux-aarch64':'build', 'linux-x86_64':'build', 'mac-aarch64':'build', 'mac-x86_64':'build', 'windows-x86_64':'build']
+    static Map<String, Object> buildResults = [:]
+    static Map<String, Integer> buildNumbers = [:]
+}
+
+def loadBuildNumbersFromBuildResults() {
+    for (k in Globals.buildResults.keySet()) {
+        Globals.buildNumbers[k] = Globals.buildResults[k].number
+    }
+}
+
+def downloadJDK(fullVersion, majorVersion) {
+    sh "wget -O jdk-${fullVersion}.tar.gz https://download.oracle.com/java/${majorVersion}/archive/jdk-${fullVersion}_linux-x64_bin.tar.gz"
+    sh "tar zxvf jdk-${fullVersion}.tar.gz"
+
+    env.JAVA_HOME = "${WORKSPACE}/tools/jdk-${fullVersion}"
+}
+
+pipeline {
+    agent {
+        label 'office && linux && x64 && openjfx-orchestration'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        parallelsAlwaysFailFast()
+    }
+
+    parameters {
+        string(name: 'GIT_REF', defaultValue: 'refs/tags/0.0.1', description: '<p>The git ref to checkout after cloning the repository (branch: <code>refs/heads/main</code>, tag: <code>refs/tags/0.0.1</code>, git hash: <code>commit-id</code>).</p>')
+    }
+
+    stages {
+        stage('Set description') {
+            steps {
+                script {
+                    currentBuild.description = params.GIT_REF
+                }
+            }
+        }
+
+        stage('Clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Clone repository') {
+            steps {
+                dir("repo") {
+                    checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: "git@github.com:gluonhq/cameracapture.git", credentialsId: "github-erwin"]], branches: [[name: "${env.GIT_REF}"]]], poll: false
+                }
+            }
+        }
+
+        stage('Download JDK') {
+            steps {
+                dir("tools") {
+                    script {
+                        downloadJDK '25.0.2', '25'
+                    }
+                }
+            }
+        }
+
+        stage('Build targets') {
+            steps {
+                dir("repo") {
+                    script {
+                        def targetBuildStages = [:]
+                        for (target in Globals.targets.keySet()) {
+                            if (Globals.targets[target] == "build") {
+                                def jobName = "wave-cameracapture-target"
+                                def targetParameter = "${target}"
+                                targetBuildStages["${target}"] = {
+                                    build(job: "${jobName}", parameters: [
+                                        string(name: 'TARGET', value: targetParameter),
+                                        string(name: 'GIT_REF', value: params.GIT_REF)
+                                    ])
+                                }
+                            }
+                        }
+                        Globals.buildResults = parallel targetBuildStages
+                        loadBuildNumbersFromBuildResults()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy maven artifacts') {
+            steps {
+                dir("repo") {
+                    script {
+                        for (target in Globals.buildNumbers.keySet()) {
+                            def buildNumber = Globals.buildNumbers["${target}"]
+                            copyArtifacts projectName: "wave-cameracapture-target", selector: specific("${buildNumber}"), flatten: true, filter: 'target/cameracapture-*.jar', target: "target", fingerprintArtifacts: true
+                        }
+
+                        withCredentials([
+                            sshUserPrivateKey(credentialsId: "xps-maven-upload", keyFileVariable: 'GLUON_MAVEN_KEY_FILE', usernameVariable: 'GLUON_MAVEN_USERNAME')
+                        ]) {
+                            sh "./mvnw deploy -P publish-platform-artifacts --settings maven-settings.xml -Dmaven.main.skip=true -DskipTests -Dmaven.install.skip=true"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        // Send notifications to slack
+        failure {
+            slackSend(channel: '#notifications', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER}: ${params.GIT_REF} failed. (<${env.BUILD_URL}|Open>)", color: 'danger', tokenCredentialId: 'gluonhq-slack-integration')
+        }
+        success {
+            slackSend(channel: '#notifications', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER}: ${params.GIT_REF} completed successfully. (<${env.BUILD_URL}|Open>)", color: 'good', tokenCredentialId: 'gluonhq-slack-integration')
+        }
+    }
+}

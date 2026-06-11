@@ -1,0 +1,157 @@
+static def determineAgentLabel(target) {
+    if (target == 'linux-x86_64') {
+        return "linux && x64 && openjfx && office"
+    } else if (target == 'linux-aarch64') {
+        return "linux && aarch64 && openjfx && office"
+    } else if (target == 'mac-x86_64') {
+        return 'mac && x64'
+    } else if (target == 'mac-aarch64') {
+        return 'mac && aarch64'
+    } else if (target == 'windows-x86_64') {
+        return "windows && x64 && openjfx && office"
+    }
+}
+
+def downloadJDK(target, fullVersion, majorVersion) {
+    def downloadTarget = 'linux-x64'
+    def downloadExtension = 'tar.gz'
+    if (target == 'windows-x86_64') {
+        downloadTarget = 'windows-x64'
+        downloadExtension = 'zip'
+    } else if (target == 'mac-x86_64') {
+        downloadTarget = 'macos-x64'
+    } else if (target == 'mac-aarch64') {
+        downloadTarget = 'macos-aarch64'
+    } else if (target == 'linux-aarch64') {
+        downloadTarget = 'linux-aarch64'
+    }
+
+    sh "wget -O jdk-${fullVersion}.${downloadExtension} https://download.oracle.com/java/${majorVersion}/archive/jdk-${fullVersion}_${downloadTarget}_bin.${downloadExtension}"
+    if (downloadExtension == 'tar.gz') {
+        sh "tar zxvf jdk-${fullVersion}.tar.gz"
+    } else {
+        sh "unzip jdk-${fullVersion}.zip"
+    }
+
+    if (target == 'mac-aarch64' || target == 'mac-x86_64') {
+        env.JAVA_HOME = "${WORKSPACE}/tools/jdk-${fullVersion}.jdk/Contents/Home"
+    } else {
+        env.JAVA_HOME = "${WORKSPACE}/tools/jdk-${fullVersion}"
+    }
+}
+
+def downloadJextract(target, majorVersion, minorVersion, buildNumber) {
+    def downloadTarget = 'linux-x64'
+    if (target == 'windows-x86_64') {
+        downloadTarget = 'windows-x64'
+    } else if (target == 'mac-x86_64') {
+        downloadTarget = 'macos-x64'
+    } else if (target == 'mac-aarch64') {
+        downloadTarget = 'macos-aarch64'
+    } else if (target == 'linux-aarch64') {
+        downloadTarget = 'linux-aarch64'
+    }
+
+    sh "wget -O jextract-${majorVersion}.tar.gz https://download.java.net/java/early_access/jextract/${majorVersion}/${minorVersion}/openjdk-${majorVersion}-jextract+${minorVersion}-${buildNumber}_${downloadTarget}_bin.tar.gz"
+    sh "tar zxvf jextract-${majorVersion}.tar.gz"
+
+    env.JEXTRACT = "${WORKSPACE}/tools/jextract-25"
+}
+
+pipeline {
+    agent {
+        label determineAgentLabel(params.TARGET)
+    }
+
+    options {
+        copyArtifactPermission('wave-cameracapture-build')
+        skipDefaultCheckout()
+    }
+
+    parameters {
+        string(name: 'GIT_REF', defaultValue: 'refs/tags/0.0.1', description: '<p>The git ref to checkout after cloning the repository (branch: <code>refs/heads/main</code>, tag: <code>refs/tags/0.0.1</code>, git hash: <code>commit-id</code>).</p>')
+        choice(name: 'TARGET', choices: ['linux-x86_64', 'linux-aarch64', 'mac-x86_64', 'mac-aarch64', 'windows-x86_64'], description: 'Build for the specified target platform.')
+    }
+
+    stages {
+        stage('Set description') {
+            steps {
+                script {
+                    def description = "${params.TARGET}"
+                    description += " - ${params.GIT_REF}"
+                    currentBuild.description = description
+                }
+            }
+        }
+
+        stage('Clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Clone repository') {
+            steps {
+                dir("repo") {
+                    checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: "git@github.com:gluonhq/cameracapture.git", credentialsId: "github-erwin"]], branches: [[name: "${env.GIT_REF}"]]], poll: false
+                }
+            }
+        }
+
+        stage('Download JDK') {
+            steps {
+                dir("tools") {
+                    script {
+                        downloadJDK params.TARGET, '25.0.2', '25'
+                    }
+                }
+            }
+        }
+
+        stage('Download Jextract') {
+            steps {
+                dir("tools") {
+                    script {
+                        downloadJextract params.TARGET, '25', '2', '4'
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir("repo") {
+                    script {
+                        sh "make install"
+                    }
+                }
+            }
+        }
+
+        stage('Archive artifact') {
+            steps {
+                dir("repo") {
+                    archiveArtifacts artifacts: 'target/cameracapture-*.jar', fingerprint: true
+                }
+            }
+        }
+    }
+
+    post {
+        // Remove the downloaded JDK and Jextract.
+        always {
+            dir("tools") {
+                sh "rm -rf jdk-*"
+                sh "rm -rf jextract-*"
+            }
+        }
+
+        // Send notifications to slack
+        failure {
+            slackSend(channel: '#notifications', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER}: ${params.GIT_REF} - ${params.TARGET} failed. (<${env.BUILD_URL}|Open>)", color: 'danger', tokenCredentialId: 'gluonhq-slack-integration')
+        }
+        success {
+            slackSend(channel: '#notifications', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER}: ${params.GIT_REF} - ${params.TARGET} completed successfully. (<${env.BUILD_URL}|Open>)", color: 'good', tokenCredentialId: 'gluonhq-slack-integration')
+        }
+   }
+}

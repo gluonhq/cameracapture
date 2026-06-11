@@ -10,22 +10,18 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>gluon-nexus</id>
-            <url>https://nexus.gluonhq.com/nexus/content/repositories/releases</url>
-        </repository>
-        <repository>
-            <id>Gluon Snapshots</id>
-            <url>https://nexus.gluonhq.com/nexus/content/repositories/public-snapshots/</url>
-        </repository>
-    </repositories>
-
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>3.5.3</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -69,14 +65,78 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>publish-platform-artifacts</id>
+            <build>
+                <plugins>
+                    <!-- skip classifier requirement when deploying artifacts -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>classifier-build</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-platform-jars</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-artifact</goal>
+                                </goals>
+                                <configuration>
+                                    <artifacts>
+                                        <artifact>
+                                            <file>target/${project.artifactId}-${project.version}-darwin-aarch64.jar</file>
+                                            <type>jar</type>
+                                            <classifier>darwin-aarch64</classifier>
+                                        </artifact>
+                                        <artifact>
+                                            <file>target/${project.artifactId}-${project.version}-darwin-x86_64.jar</file>
+                                            <type>jar</type>
+                                            <classifier>darwin-x86_64</classifier>
+                                        </artifact>
+                                        <artifact>
+                                            <file>target/${project.artifactId}-${project.version}-linux-aarch64.jar</file>
+                                            <type>jar</type>
+                                            <classifier>linux-aarch64</classifier>
+                                        </artifact>
+                                        <artifact>
+                                            <file>target/${project.artifactId}-${project.version}-linux-x86_64.jar</file>
+                                            <type>jar</type>
+                                            <classifier>linux-x86_64</classifier>
+                                        </artifact>
+                                        <artifact>
+                                            <file>target/${project.artifactId}-${project.version}-windows-x86_64.jar</file>
+                                            <type>jar</type>
+                                            <classifier>windows-x86_64</classifier>
+                                        </artifact>
+                                    </artifacts>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <distributionManagement>
         <repository>
-            <id>gluon-nexus</id>
-            <url>https://nexus.gluonhq.com/nexus/content/repositories/releases</url>
+            <id>gluon-maven</id>
+            <url>scpexe://maven.gluonhq.com//var/www/maven/nexus/content/repositories/wave</url>
         </repository>
         <snapshotRepository>
-            <id>gluon-nexus</id>
-            <url>https://nexus.gluonhq.com/nexus/content/repositories/public-snapshots</url>
+            <id>gluon-maven</id>
+            <url>scpexe://maven.gluonhq.com//var/www/maven/nexus/content/repositories/wave-snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
