@@ -13,6 +13,11 @@ Linux-x86_64_LIB_OUTPUT_DIR :=
 Linux-x86_64_LIBNAME      := libcameracapture.so
 Linux-x86_64_CLASSIFIER   := linux-x86_64
 
+Linux-aarch64_CMAKE_PRESET   := 
+Linux-aarch64_LIB_OUTPUT_DIR := 
+Linux-aarch64_LIBNAME        := libsafestorage.so
+Linux-aarch64_CLASSIFIER     := linux-aarch64
+
 Mac-x86_64_CMAKE_PRESET := 
 Mac-x86_64_LIB_OUTPUT_DIR := 
 Mac-x86_64_LIBNAME      := libcameracapture.dylib
@@ -52,6 +57,9 @@ else
     ifeq ($(UNAME_P),x86_64)
 		OS_ARCH := x86_64
     endif
+    ifeq ($(UNAME_P),aarch64)
+        OS_ARCH := aarch64
+    endif
     ifeq ($(UNAME_P),i386)
 		OS_ARCH := x86_64
     endif
@@ -60,7 +68,7 @@ else
     endif
 endif
 
-known_targets := Linux-x86_64 Mac-x86_64 Mac-aarch64 Windows-x86_64
+known_targets := Linux-x86_64 Linux-aarch64 Mac-x86_64 Mac-aarch64 Windows-x86_64
 target := $(OS_NAME)-$(OS_ARCH)
 
 ifeq (,$(findstring $(strip $(target)),$(known_targets)))
