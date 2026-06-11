@@ -3,7 +3,6 @@ package com.gluonhq.cameracapture;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,17 +16,18 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.gluonhq.cameracapture.callback.InnerFrameCallback;
 import com.gluonhq.cameracapture.h.NativeCapture;
 
 public class CameraCapture {
+
+    private static final Logger LOG = Logger.getLogger(CameraCapture.class.getName());
 
     private static InnerFrameCallback callback;
 
@@ -102,8 +102,10 @@ public class CameraCapture {
     private static void loadNativeLibrary() throws IOException {
         String libraryName = System.mapLibraryName("cameracapture");
         Path tempFile = Files.createTempFile("cameracapture", libraryName.substring(libraryName.lastIndexOf(".")));
-        try (InputStream isLibrary = CameraCapture.class.getResourceAsStream(libraryName)) {
-            Files.copy(isLibrary, tempFile);
+
+        LOG.log(Level.INFO, "Storing native library " + libraryName + " to " + tempFile);
+        try (InputStream isLibrary = CameraCapture.class.getResourceAsStream("/" + libraryName)) {
+            Files.copy(isLibrary, tempFile, StandardCopyOption.REPLACE_EXISTING);
         }
 
         System.load(tempFile.toFile().getAbsolutePath());
