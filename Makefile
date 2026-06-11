@@ -15,7 +15,7 @@ Linux-x86_64_CLASSIFIER   := linux-x86_64
 
 Linux-aarch64_CMAKE_PRESET   := 
 Linux-aarch64_LIB_OUTPUT_DIR := 
-Linux-aarch64_LIBNAME        := libsafestorage.so
+Linux-aarch64_LIBNAME        := libcameracapture.so
 Linux-aarch64_CLASSIFIER     := linux-aarch64
 
 Mac-x86_64_CMAKE_PRESET := 
